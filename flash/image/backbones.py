@@ -64,11 +64,12 @@ def catch_url_error(fn):
 
 if _TORCHVISION_AVAILABLE:
 
+    HTTPS_VISSL = "https://dl.fbaipublicfiles.com/vissl/model_zoo/"
     RESNET50_WEIGHTS_PATHS = {
         "supervised": None,
-        "simclr": "https://dl.fbaipublicfiles.com/vissl/model_zoo/simclr_rn50_800ep_simclr_8node_resnet_16_07_20.7e8feed1/model_final_checkpoint_phase799.torch",
-        "swav": "https://dl.fbaipublicfiles.com/vissl/model_zoo/swav_in1k_rn50_800ep_swav_8node_resnet_27_07_20.a0a6b676/model_final_checkpoint_phase799.torch",
-        "barlow-twins": "https://dl.fbaipublicfiles.com/vissl/model_zoo/barlow_twins/barlow_twins_32gpus_4node_imagenet1k_1000ep_resnet50.torch",
+        "simclr": HTTPS_VISSL + "simclr_rn50_800ep_simclr_8node_resnet_16_07_20.7e8feed1/model_final_checkpoint_phase799.torch",
+        "swav": HTTPS_VISSL + "swav_in1k_rn50_800ep_swav_8node_resnet_27_07_20.a0a6b676/model_final_checkpoint_phase799.torch",
+        "barlow-twins": HTTPS_VISSL + "barlow_twins/barlow_twins_32gpus_4node_imagenet1k_1000ep_resnet50.torch",
     }
 
     def _fn_mobilenet_vgg(model_name: str, pretrained: bool = True) -> Tuple[nn.Module, int]:
@@ -90,12 +91,9 @@ if _TORCHVISION_AVAILABLE:
 
     def _fn_resnet(model_name: str,
                    pretrained: Union[bool, str] = True,
-                   weights_paths: dict = {"supervised": None}) -> Tuple[nn.Module, int]:
+                   weights_paths: dict = {"supervised": None},) -> Tuple[nn.Module, int]:
         # load according to pretrained if a bool is specified, else set to False
-        if isinstance(pretrained, bool):
-            pretrained_flag = pretrained
-        else:
-            pretrained_flag = False
+        pretrained_flag = pretrained isinstance(pretrained, bool) else False
 
         model: nn.Module = getattr(torchvision.models, model_name, None)(pretrained_flag)
         backbone = nn.Sequential(*list(model.children())[:-2])
@@ -111,7 +109,7 @@ if _TORCHVISION_AVAILABLE:
                 )
 
                 # add logic here for loading resnet weights from other libraries
-                if "classy_state_dict" in model_weights.keys():
+                if "classy_state_dict" in model_weights:
                     model_weights = model_weights["classy_state_dict"]["base_model"]["model"]["trunk"]
                     model_weights = {
                         key.replace("_feature_blocks.", "") if "_feature_blocks." in key else key: val
@@ -134,24 +132,21 @@ if _TORCHVISION_AVAILABLE:
         return backbone, 256
 
     for model_name in RESNET_MODELS:
+        clf_kwargs = dict(
+            fn=catch_url_error(partial(_fn_resnet, model_name=model_name)),
+            name=model_name,
+            namespace="vision",
+            package="torchvision",
+            type="resnet",
+            weights_paths={"supervised": None}
+        )
         if model_name == 'resnet50':
-            IMAGE_CLASSIFIER_BACKBONES(
+            clf_kwargs.update(dict(
                 fn=catch_url_error(partial(_fn_resnet, model_name=model_name, weights_paths=RESNET50_WEIGHTS_PATHS)),
-                name=model_name,
-                namespace="vision",
                 package="multiple",
-                type="resnet",
                 weights_paths=RESNET50_WEIGHTS_PATHS
             )
-        else:
-            IMAGE_CLASSIFIER_BACKBONES(
-                fn=catch_url_error(partial(_fn_resnet, model_name=model_name)),
-                name=model_name,
-                namespace="vision",
-                package="torchvision",
-                type="resnet",
-                weights_paths={"supervised": None}
-            )
+        IMAGE_CLASSIFIER_BACKBONES(**clf_kwargs)
 
         OBJ_DETECTION_BACKBONES(
             fn=catch_url_error(partial(_fn_resnet_fpn, model_name)),
