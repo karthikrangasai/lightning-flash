@@ -155,10 +155,10 @@ if _TORCHVISION_AVAILABLE:
             type="resnet-fpn"
         )
 
-    def _fn_densenet(model_name: str, pretrained: bool = True) -> Tuple[nn.Module, int]:
-        model: nn.Module = getattr(torchvision.models, model_name, None)(pretrained)
-        backbone = nn.Sequential(*model.features, nn.ReLU(inplace=True))
-        num_features = model.classifier.in_features
+    def _fn_densenet(model_name: str, pretrained: bool=True) -> Tuple[nn.Module, int]:
+        model: nn.Module=getattr(torchvision.models, model_name, None)(pretrained)
+        backbone=nn.Sequential(*model.features, nn.ReLU(inplace=True))
+        num_features=model.classifier.in_features
         return backbone, num_features
 
     for model_name in DENSENET_MODELS:
@@ -174,12 +174,12 @@ if _TIMM_AVAILABLE:
 
     def _fn_timm(
         model_name: str,
-        pretrained: bool = True,
-        num_classes: int = 0,
+        pretrained: bool=True,
+        num_classes: int=0,
         **kwargs,
     ) -> Tuple[nn.Module, int]:
-        backbone = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes, **kwargs)
-        num_features = backbone.num_features
+        backbone=timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes, **kwargs)
+        num_features=backbone.num_features
         return backbone, num_features
 
     for model_name in timm.list_models():
@@ -196,22 +196,22 @@ if _TIMM_AVAILABLE:
 # https://arxiv.org/abs/2104.14294 from Mathilde Caron and al. (29 Apr 2021)
 # weights from https://github.com/facebookresearch/dino
 def dino_deits16(*_, **__):
-    backbone = torch.hub.load('facebookresearch/dino:main', 'dino_deits16')
+    backbone=torch.hub.load('facebookresearch/dino:main', 'dino_deits16')
     return backbone, 384
 
 
 def dino_deits8(*_, **__):
-    backbone = torch.hub.load('facebookresearch/dino:main', 'dino_deits8')
+    backbone=torch.hub.load('facebookresearch/dino:main', 'dino_deits8')
     return backbone, 384
 
 
 def dino_vitb16(*_, **__):
-    backbone = torch.hub.load('facebookresearch/dino:main', 'dino_vitb16')
+    backbone=torch.hub.load('facebookresearch/dino:main', 'dino_vitb16')
     return backbone, 768
 
 
 def dino_vitb8(*_, **__):
-    backbone = torch.hub.load('facebookresearch/dino:main', 'dino_vitb8')
+    backbone=torch.hub.load('facebookresearch/dino:main', 'dino_vitb8')
     return backbone, 768
 
 
