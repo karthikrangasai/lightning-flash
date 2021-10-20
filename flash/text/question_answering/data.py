@@ -83,6 +83,7 @@ class QuestionAnsweringDataSource(DataSource):
             return_overflowing_tokens=True,
             return_offsets_mapping=True,
             padding=self.padding,
+            return_tensors="pt",
         )
 
         if stage == RunningStage.TRAINING:
